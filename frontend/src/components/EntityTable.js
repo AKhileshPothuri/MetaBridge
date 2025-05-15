@@ -1,7 +1,7 @@
 import React from 'react';
 import { Table, Button, Tag } from 'antd';
 
-const EntityTable = ({ data, entityType, onSync }) => {
+const EntityTable = ({ data, entityType, onSync, onHistory }) => {
   const columns = [
     {
       title: `${entityType} Name`,
@@ -26,15 +26,31 @@ const EntityTable = ({ data, entityType, onSync }) => {
       title: 'Prod Updated',
       dataIndex: 'prod_updated',
     },
+    entityType === 'catalog' ? {
+      title: 'History',
+      render: (_, record) => (
+        <Button onClick={() => onHistory(record.tableid)}>
+          View History
+        </Button>
+      ),
+    } : null,
+    entityType === 'context' ? {
+      title: 'History',
+      render: (_, record) => (
+        <Button onClick={() => onHistory(record.contextid)}>
+          View History
+        </Button>
+      ),
+    } : null,
     {
       title: 'Action',
       render: (_, record) => (
-        <Button type="primary" onClick={() => onSync(record.id)} disabled={!record.dev_present}>
+        <Button type="primary" onClick={() => onSync(record.tableid || record.systemid || record.roleid || record.categoryid || record.contextid)} disabled={!record.dev_present}>
           Sync to Prod
         </Button>
       ),
     },
-  ];
+  ].filter(Boolean);
 
   return <Table columns={columns} dataSource={data} rowKey={entityType === 'system' ? 'systemid' : entityType === 'role' ? 'roleid' : entityType === 'category' ? 'categoryid' : entityType === 'catalog' ? 'tableid' : 'contextid'} />;
 };

@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from . import models
+from typing import Dict, Any
 
 def get_all_systems(db: Session):
     return db.query(models.System).all()
@@ -84,4 +85,21 @@ def upsert_context_to_prod(dev_context: models.Context, prod_db: Session):
     else:
         prod_db.add(models.Context(**{k: v for k, v in dev_context.__dict__.items() if k != '_sa_instance_state'}))
     prod_db.commit()
-    return True 
+    return True
+
+def get_full_catalog_by_id(db: Session, tableid: int) -> Dict[str, Any]:
+    # Mocked join: in real code, join catalog, catalog_mapping, catalog_rules
+    catalog = db.query(models.Catalog).filter(models.Catalog.tableid == tableid).first()
+    # Mocked mapping and rules
+    catalog_mapping = {"roleid": 1, "categoryid": 2, "systemid": 3}
+    catalog_rules = [
+        {"rule": "Rule 1", "details": "Details 1"},
+        {"rule": "Rule 2", "details": "Details 2"}
+    ]
+    if not catalog:
+        return None
+    result = {**catalog.__dict__}
+    result.pop("_sa_instance_state", None)
+    result["mapping"] = catalog_mapping
+    result["rules_list"] = catalog_rules
+    return result 

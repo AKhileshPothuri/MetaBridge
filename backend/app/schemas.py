@@ -16,7 +16,7 @@ class System(SystemBase):
     systemid: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class RoleBase(BaseModel):
     rolename: str
@@ -31,7 +31,7 @@ class Role(RoleBase):
     roleid: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CategoryBase(BaseModel):
     categoryname: str
@@ -46,7 +46,7 @@ class Category(CategoryBase):
     categoryid: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CatalogBase(BaseModel):
     table_vector_id: Optional[str]
@@ -62,7 +62,7 @@ class CatalogBase(BaseModel):
 class Catalog(CatalogBase):
     tableid: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ContextBase(BaseModel):
     context_vector_id: Optional[str]
@@ -80,4 +80,20 @@ class ContextBase(BaseModel):
 class Context(ContextBase):
     contextid: int
     class Config:
-        orm_mode = True 
+        from_attributes = True
+
+class TableAuditBase(BaseModel):
+    table_name: str
+    record_id: int
+    action: str
+    old_data: Optional[Any]
+    new_data: Optional[Any]
+    changed_by: Optional[str]
+    changed_at: datetime
+    change_reason: Optional[str]
+
+class TableAudit(TableAuditBase):
+    audit_id: int
+
+    class Config:
+        from_attributes = True 

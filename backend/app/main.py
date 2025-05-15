@@ -2,6 +2,9 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from . import db, crud, models, schemas
 from fastapi.middleware.cors import CORSMiddleware
+from typing import List, Optional
+from datetime import datetime, timedelta
+import random
 
 app = FastAPI()
 app.add_middleware(
@@ -93,4 +96,82 @@ def sync_context(contextid: int, dev_db: Session = Depends(get_dev_db), prod_db:
     if not dev_context:
         raise HTTPException(status_code=404, detail="Context not found in dev")
     crud.upsert_context_to_prod(dev_context, prod_db)
-    return {"status": "success"} 
+    return {"status": "success"}
+
+@app.get("/audit/history/{table_name}/{record_id}", response_model=List[schemas.TableAudit])
+def get_record_history(table_name: str, record_id: int, db: Session = Depends(get_dev_db)):
+    """Get audit history for a specific record in a table"""
+    history = db.query(models.TableAudit).filter(
+        models.TableAudit.table_name == table_name,
+        models.TableAudit.record_id == record_id
+    ).order_by(models.TableAudit.changed_at.desc()).all()
+    
+    if not history:
+        raise HTTPException(status_code=404, detail="No history found for this record")
+    return history
+
+@app.get("/audit/table/{table_name}", response_model=List[schemas.TableAudit])
+def get_table_history(
+    table_name: str,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    db: Session = Depends(get_dev_db)
+):
+    """Get audit history for an entire table with optional date filtering"""
+    query = db.query(models.TableAudit).filter(
+        models.TableAudit.table_name == table_name
+    )
+    
+    if start_date:
+        query = query.filter(models.TableAudit.changed_at >= start_date)
+    if end_date:
+        query = query.filter(models.TableAudit.changed_at <= end_date)
+        
+    history = query.order_by(models.TableAudit.changed_at.desc()).all()
+    
+    if not history:
+        raise HTTPException(status_code=404, detail="No history found for this table")
+    return history
+
+@app.get("/catalogs/{tableid}/history", response_model=List[schemas.TableAudit])
+def get_catalog_history(tableid: int):
+    actions = ["INSERT", "UPDATE", "DELETE"]
+    history = []
+    for i in range(20):
+        history.append(schemas.TableAudit(
+            audit_id=i+1,
+            table_name="catalog",
+            record_id=tableid,
+            action=random.choice(actions),
+            old_data={"table_name": f"Catalog {tableid}", "desc": "Old description"},
+            new_data={"table_name": f"Catalog {tableid}", "desc": f"New description {i}"},
+            changed_by=f"user{i%3}",
+            changed_at=f"2024-06-0{(i%9)+1}T12:00:00",
+            change_reason="Mocked change"
+        ))
+    return history
+
+@app.get("/catalogs/full/{tableid}")
+def get_full_catalog(tableid: int, dev_db: Session = Depends(get_dev_db)):
+    catalog = crud.get_full_catalog_by_id(dev_db, tableid)
+    if not catalog:
+        raise HTTPException(status_code=404, detail="Catalog not found")
+    return catalog
+
+@app.get("/contexts/{contextid}/history", response_model=List[schemas.TableAudit])
+def get_context_history(contextid: int):
+    actions = ["INSERT", "UPDATE", "DELETE"]
+    history = []
+    for i in range(20):
+        history.append(schemas.TableAudit(
+            audit_id=i+1,
+            table_name="context",
+            record_id=contextid,
+            action=random.choice(actions),
+            old_data={"context_name": f"Context {contextid}", "desc": "Old description"},
+            new_data={"context_name": f"Context {contextid}", "desc": f"New description {i}"},
+            changed_by=f"user{i%3}",
+            changed_at=f"2024-06-0{(i%9)+1}T12:00:00",
+            change_reason="Mocked change"
+        ))
+    return history 
