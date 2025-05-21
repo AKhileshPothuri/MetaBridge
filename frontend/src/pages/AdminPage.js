@@ -39,13 +39,15 @@ const AdminPage = () => {
     if (selectedSystem) {
       console.log("Selected system:", selectedSystem);
       axios.get(`${apiUrl}/roles/by_system/${selectedSystem.systemid}`).then(res => {
-          console.log(`Fetched Roles for system ${selectedSystem.systemid}:`, res.data.dev);
+          console.log(`Fetched Roles (before setRoles) for system ${selectedSystem.systemid}:`, res.data.dev);
           setRoles(res.data.dev || []);
+          console.log(`Roles state should be updated now for system ${selectedSystem.systemid}.`);
       }).catch(error => console.error(`Error fetching roles for system ${selectedSystem.systemid}:`, error));
 
       axios.get(`${apiUrl}/categories/by_system/${selectedSystem.systemid}`).then(res => {
-          console.log(`Fetched Categories for system ${selectedSystem.systemid}:`, res.data.dev);
+          console.log(`Fetched Categories (before setCategories) for system ${selectedSystem.systemid}:`, res.data.dev);
           setCategories(res.data.dev || []);
+          console.log(`Categories state should be updated now for system ${selectedSystem.systemid}.`);
       }).catch(error => console.error(`Error fetching categories for system ${selectedSystem.systemid}:`, error));
     } else {
         setRoles([]); // Clear roles if no system is selected
