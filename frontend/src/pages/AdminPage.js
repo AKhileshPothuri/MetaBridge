@@ -25,6 +25,7 @@ const AdminPage = () => {
   const [roleForm] = Form.useForm();
   const [categoryForm] = Form.useForm();
   const [dbType, setDbType] = useState('postgres');
+  const [detailPaneKey, setDetailPaneKey] = useState(0); // Key to force re-render of detail pane
 
   // Fetch systems on component mount
   useEffect(() => {
@@ -38,11 +39,12 @@ const AdminPage = () => {
   useEffect(() => {
     if (selectedSystem) {
       console.log("Selected system:", selectedSystem);
+      // Use functional updates for state setters
       axios.get(`${apiUrl}/roles/by_system/${selectedSystem.systemid}`).then(res => {
           console.log(`Fetched Roles (API response data.dev) for system ${selectedSystem.systemid}:`, res.data.dev);
           const rolesData = res.data.dev || [];
           console.log(`Calling setRoles with:`, rolesData);
-          setRoles(rolesData);
+          setRoles(prevState => rolesData); // Functional update
           console.log(`setRoles called for system ${selectedSystem.systemid}.`);
       }).catch(error => console.error(`Error fetching roles for system ${selectedSystem.systemid}:`, error));
 
@@ -50,12 +52,16 @@ const AdminPage = () => {
           console.log(`Fetched Categories (API response data.dev) for system ${selectedSystem.systemid}:`, res.data.dev);
           const categoriesData = res.data.dev || [];
            console.log(`Calling setCategories with:`, categoriesData);
-          setCategories(categoriesData);
+          setCategories(prevState => categoriesData); // Functional update
           console.log(`setCategories called for system ${selectedSystem.systemid}.`);
       }).catch(error => console.error(`Error fetching categories for system ${selectedSystem.systemid}:`, error));
+
+      setDetailPaneKey(prevKey => prevKey + 1); // Increment key to force re-render of detail pane
+
     } else {
         setRoles([]); // Clear roles if no system is selected
         setCategories([]); // Clear categories if no system is selected
+        setDetailPaneKey(prevKey => prevKey + 1); // Increment key even if no system selected
     }
   }, [apiUrl, selectedSystem]); // Depend on selectedSystem to re-fetch
 
@@ -74,7 +80,10 @@ const AdminPage = () => {
   const handleAddRole = (values) => {
     axios.post(`${apiUrl}/roles/`, { ...values, systemid: selectedSystem.systemid }).then(() => {
       // Re-fetch roles for the current system after adding
-      fetchRoles(selectedSystem.systemid);
+      axios.get(`${apiUrl}/roles/by_system/${selectedSystem.systemid}`).then(res => {
+          console.log(`Fetched Roles after adding (API response data.dev) for system ${selectedSystem.systemid}:`, res.data.dev);
+          setRoles(prevState => res.data.dev || []); // Functional update
+      }).catch(error => console.error(`Error fetching roles after adding for system ${selectedSystem.systemid}:`, error));
       setRoleModal(false);
       roleForm.resetFields();
     }).catch(error => console.error("Error adding role:", error));
@@ -99,7 +108,10 @@ const AdminPage = () => {
       db_creds,
     }).then(() => {
       // Re-fetch categories for the current system after adding
-      fetchCategories(selectedSystem.systemid);
+      axios.get(`${apiUrl}/categories/by_system/${selectedSystem.systemid}`).then(res => {
+           console.log(`Fetched Categories after adding (API response data.dev) for system ${selectedSystem.systemid}:`, res.data.dev);
+          setCategories(prevState => res.data.dev || []); // Functional update
+      }).catch(error => console.error(`Error fetching categories after adding for system ${selectedSystem.systemid}:`, error));
       setCategoryModal(false);
       categoryForm.resetFields();
     }).catch(error => console.error("Error adding category:", error));
@@ -165,7 +177,7 @@ const AdminPage = () => {
           />
         </Card>
       </Col>
-      <Col span={16}>
+      <Col span={16} key={detailPaneKey}>
         {selectedSystem ? (
           <>
             <Card title={`Details for ${selectedSystem.systemname}`} style={{ marginBottom: 16 }}>
