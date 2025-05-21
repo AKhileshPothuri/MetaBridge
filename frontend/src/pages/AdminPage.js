@@ -129,7 +129,7 @@ const AdminPage = () => {
       <Tabs.TabPane tab="Roles" key="roles" disabled={!selectedSystem}>
         <Button type="primary" onClick={() => setRoleModal(true)} style={{ marginBottom: 16 }}>Add Role</Button>
         <h3>Roles for {selectedSystem?.systemname}</h3>
-        <Table columns={roleColumns} dataSource={roles} rowKey="roleid" pagination={false} />
+        <Table key="roles-table" columns={roleColumns} dataSource={roles} rowKey="roleid" pagination={false} />
         <Modal open={roleModal} onCancel={() => setRoleModal(false)} onOk={() => roleForm.submit()} title="Add Role" okText="Add">
           <Form form={roleForm} onFinish={handleAddRole} layout="vertical">
             <Form.Item name="rolename" label="Role Name" rules={[{ required: true }]}> <Input /> </Form.Item>
@@ -140,7 +140,7 @@ const AdminPage = () => {
       <Tabs.TabPane tab="Categories" key="categories" disabled={!selectedSystem}>
         <Button type="primary" onClick={() => setCategoryModal(true)} style={{ marginBottom: 16 }}>Add Category</Button>
         <h3>Categories for {selectedSystem?.systemname}</h3>
-        <Table columns={categoryColumns} dataSource={categories} rowKey="categoryid" pagination={false} />
+        <Table key="categories-table" columns={categoryColumns} dataSource={categories} rowKey="categoryid" pagination={false} />
         <Modal open={categoryModal} onCancel={() => setCategoryModal(false)} onOk={() => categoryForm.submit()} title="Add Category" okText="Add">
           <Form form={categoryForm} onFinish={handleAddCategory} layout="vertical">
             <Form.Item name="categoryname" label="Category Name" rules={[{ required: true }]}> <Input /> </Form.Item>

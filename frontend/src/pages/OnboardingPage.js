@@ -22,8 +22,17 @@ const OnboardingPage = () => {
   }, [apiUrl]);
 
   const fetchSchemas = () => {
+    if (categoryId === null) return; // Prevent API call if categoryId is not set
     setLoading(true);
-    axios.post(`${apiUrl}/db/list_schemas/`, { categoryid: categoryId })
+    // Explicitly ensure categoryId is an integer before sending
+    const idToSend = parseInt(categoryId);
+    if (isNaN(idToSend)) {
+        console.error("Invalid categoryId:", categoryId);
+        message.error("Invalid category selected.");
+        setLoading(false);
+        return;
+    }
+    axios.post(`${apiUrl}/db/list_schemas/`, { categoryid: idToSend })
       .then(res => setSchemas(res.data))
       .catch(error => {
         console.error('Error fetching schemas:', error);
@@ -34,8 +43,17 @@ const OnboardingPage = () => {
   };
 
   const fetchTables = () => {
+    if (categoryId === null || schema === null) return; // Prevent API call if categoryId or schema is not set
     setLoading(true);
-    axios.post(`${apiUrl}/db/list_tables/`, { categoryid: categoryId, schema })
+    // Explicitly ensure categoryid is an integer before sending
+    const idToSend = parseInt(categoryId);
+     if (isNaN(idToSend)) {
+        console.error("Invalid categoryId:", categoryId);
+        message.error("Invalid category selected.");
+        setLoading(false);
+        return;
+    }
+    axios.post(`${apiUrl}/db/list_tables/`, { categoryid: idToSend, schema })
       .then(res => setTables(res.data))
       .catch(error => {
         console.error('Error fetching tables:', error);
@@ -46,8 +64,17 @@ const OnboardingPage = () => {
   };
 
   const handleGenerate = () => {
+     if (categoryId === null || schema === null || table === null) return; // Prevent API call if inputs not set
     setLoading(true);
-    axios.post(`${apiUrl}/db/generate_metadata/`, { categoryid: categoryId, schema, table })
+     // Explicitly ensure categoryid is an integer before sending
+    const idToSend = parseInt(categoryId);
+     if (isNaN(idToSend)) {
+        console.error("Invalid categoryId:", categoryId);
+        message.error("Invalid category selected.");
+        setLoading(false);
+        return;
+    }
+    axios.post(`${apiUrl}/db/generate_metadata/`, { categoryid: idToSend, schema, table })
       .then(res => setMetadata(res.data))
       .catch(error => {
         console.error('Error generating metadata:', error);
@@ -79,7 +106,7 @@ const OnboardingPage = () => {
               <Option key={cat.categoryid} value={cat.categoryid}>{cat.categoryname}</Option>
             ))}
           </Select>
-          <Button type="primary" style={{ marginLeft: 16 }} disabled={!categoryId} onClick={() => { fetchSchemas(); setStep(1); }}>Next</Button>
+          <Button type="primary" style={{ marginLeft: 16 }} disabled={categoryId === null} onClick={() => { fetchSchemas(); setStep(1); }}>Next</Button>
         </div>
       )}
       {step === 1 && (
