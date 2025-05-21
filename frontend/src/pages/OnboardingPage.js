@@ -22,12 +22,16 @@ const OnboardingPage = () => {
   }, [apiUrl]);
 
   const fetchSchemas = () => {
-    if (categoryId === null) return; // Prevent API call if categoryId is not set
+    if (categoryId === null) {
+        console.log("fetchSchemas: categoryId is null, returning.");
+        return; // Prevent API call if categoryId is not set
+    }
     setLoading(true);
     // Explicitly ensure categoryId is an integer before sending
     const idToSend = parseInt(categoryId);
+    console.log("fetchSchemas: categoryId before API call", { value: categoryId, type: typeof categoryId, parsed: idToSend });
     if (isNaN(idToSend)) {
-        console.error("Invalid categoryId:", categoryId);
+        console.error("Invalid categoryId parsed:", categoryId);
         message.error("Invalid category selected.");
         setLoading(false);
         return;
@@ -35,7 +39,7 @@ const OnboardingPage = () => {
     axios.post(`${apiUrl}/db/list_schemas/`, { categoryid: idToSend })
       .then(res => setSchemas(res.data))
       .catch(error => {
-        console.error('Error fetching schemas:', error);
+        console.error('Error fetching schemas:', error.response ? error.response.data : error.message);
         message.error('Failed to fetch schemas');
         setSchemas([]); // Clear schemas on error
       })
