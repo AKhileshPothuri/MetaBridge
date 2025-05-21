@@ -36,7 +36,9 @@ const OnboardingPage = () => {
         setLoading(false);
         return;
     }
-    axios.post(`${apiUrl}/db/list_schemas/`, { categoryid: idToSend })
+    const requestBody = { categoryid: idToSend };
+    console.log("fetchSchemas: Request body being sent", requestBody);
+    axios.post(`${apiUrl}/db/list_schemas/`, requestBody)
       .then(res => setSchemas(res.data))
       .catch(error => {
         console.error('Error fetching schemas:', error.response ? error.response.data : error.message);

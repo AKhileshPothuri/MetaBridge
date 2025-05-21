@@ -9,6 +9,7 @@ import base64
 import json
 import os
 import requests
+from pydantic import BaseModel
 
 app = FastAPI()
 app.add_middleware(
@@ -221,8 +222,12 @@ def create_category(category: schemas.CategoryBase, db: Session = Depends(get_de
 def list_categories_by_system(systemid: int, db: Session = Depends(get_dev_db)):
     return [schemas.Category.from_orm(c) for c in db.query(models.Category).filter(models.Category.systemid == systemid).all()]
 
+class CategoryIdRequest(BaseModel):
+    categoryid: int
+
 @app.post("/db/list_schemas/")
-def list_schemas(categoryid: int = Body(...), db: Session = Depends(get_dev_db)):
+def list_schemas(request_body: schemas.CategoryIdRequest, db: Session = Depends(get_dev_db)):
+    categoryid = request_body.categoryid
     # Only Postgres for now
     category = db.query(models.Category).filter(models.Category.categoryid == categoryid).first()
     prefs = json.loads(category.category_preferences)
@@ -239,7 +244,8 @@ def list_schemas(categoryid: int = Body(...), db: Session = Depends(get_dev_db))
     return schemas_list
 
 @app.post("/db/list_tables/")
-def list_tables(categoryid: int = Body(...), schema: str = Body(...), db: Session = Depends(get_dev_db)):
+def list_tables(request_body: schemas.CategoryIdRequest, schema: str = Body(...), db: Session = Depends(get_dev_db)):
+    categoryid = request_body.categoryid
     category = db.query(models.Category).filter(models.Category.categoryid == categoryid).first()
     prefs = json.loads(category.category_preferences)
     if prefs["db_type"] != "postgres":
@@ -255,7 +261,8 @@ def list_tables(categoryid: int = Body(...), schema: str = Body(...), db: Sessio
     return tables_list
 
 @app.post("/db/generate_metadata/")
-def generate_metadata(categoryid: int = Body(...), schema: str = Body(...), table: str = Body(...)):
+def generate_metadata(request_body: schemas.CategoryIdRequest, schema: str = Body(...), table: str = Body(...)):
+    categoryid = request_body.categoryid
     # Placeholder request body
     api_url = os.getenv("METADATA_API_URL", "http://localhost:8001/generate_metadata")
     req_body = {"categoryid": categoryid, "schema": schema, "table": table}

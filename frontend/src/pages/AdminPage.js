@@ -41,16 +41,16 @@ const AdminPage = () => {
       console.log("Selected system:", selectedSystem);
       // Use functional updates for state setters
       axios.get(`${apiUrl}/roles/by_system/${selectedSystem.systemid}`).then(res => {
-          console.log(`Fetched Roles (API response data.dev) for system ${selectedSystem.systemid}:`, res.data.dev);
-          const rolesData = res.data.dev || [];
+          console.log(`Fetched Roles (API response data.dev) for system ${selectedSystem.systemid}:`, res.data);
+          const rolesData = res.data || [];
           console.log(`Calling setRoles with:`, rolesData);
           setRoles(prevState => rolesData); // Functional update
           console.log(`setRoles called for system ${selectedSystem.systemid}.`);
       }).catch(error => console.error(`Error fetching roles for system ${selectedSystem.systemid}:`, error));
 
       axios.get(`${apiUrl}/categories/by_system/${selectedSystem.systemid}`).then(res => {
-          console.log(`Fetched Categories (API response data.dev) for system ${selectedSystem.systemid}:`, res.data.dev);
-          const categoriesData = res.data.dev || [];
+          console.log(`Fetched Categories (API response data.dev) for system ${selectedSystem.systemid}:`, res.data);
+          const categoriesData = res.data || [];
            console.log(`Calling setCategories with:`, categoriesData);
           setCategories(prevState => categoriesData); // Functional update
           console.log(`setCategories called for system ${selectedSystem.systemid}.`);
