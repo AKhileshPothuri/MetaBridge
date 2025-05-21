@@ -25,6 +25,11 @@ const OnboardingPage = () => {
     setLoading(true);
     axios.post(`${apiUrl}/db/list_schemas/`, { categoryid: categoryId })
       .then(res => setSchemas(res.data))
+      .catch(error => {
+        console.error('Error fetching schemas:', error);
+        message.error('Failed to fetch schemas');
+        setSchemas([]); // Clear schemas on error
+      })
       .finally(() => setLoading(false));
   };
 
@@ -32,6 +37,11 @@ const OnboardingPage = () => {
     setLoading(true);
     axios.post(`${apiUrl}/db/list_tables/`, { categoryid: categoryId, schema })
       .then(res => setTables(res.data))
+      .catch(error => {
+        console.error('Error fetching tables:', error);
+        message.error('Failed to fetch tables');
+        setTables([]); // Clear tables on error
+      })
       .finally(() => setLoading(false));
   };
 
@@ -39,7 +49,11 @@ const OnboardingPage = () => {
     setLoading(true);
     axios.post(`${apiUrl}/db/generate_metadata/`, { categoryid: categoryId, schema, table })
       .then(res => setMetadata(res.data))
-      .catch(() => message.error('Failed to generate metadata'))
+      .catch(error => {
+        console.error('Error generating metadata:', error);
+        message.error('Failed to generate metadata');
+        setMetadata(null); // Clear metadata on error
+      })
       .finally(() => setLoading(false));
   };
 
@@ -57,7 +71,7 @@ const OnboardingPage = () => {
             style={{ width: 400 }}
             placeholder="Select Category"
             value={categoryId}
-            onChange={v => setCategoryId(v)}
+            onChange={v => setCategoryId(parseInt(v))}
             showSearch
             optionFilterProp="children"
           >

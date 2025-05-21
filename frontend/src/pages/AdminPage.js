@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Tabs, Form, Input, Button, Select, Modal, List, Card } from 'antd';
+import { Tabs, Form, Input, Button, Select, Modal, List, Card, Table } from 'antd';
 import axios from 'axios';
+import moment from 'moment';
 
 const { Option } = Select;
 
@@ -44,7 +45,7 @@ const AdminPage = () => {
 
   const handleAddSystem = (values) => {
     axios.post(`${apiUrl}/systems/`, values).then(() => {
-      axios.get(`${apiUrl}/systems/`).then(res => setSystems(res.data));
+      axios.get(`${apiUrl}/systems/`).then(res => setSystems(res.data.dev || []));
       form.resetFields();
     });
   };
@@ -81,6 +82,28 @@ const AdminPage = () => {
     });
   };
 
+  const systemColumns = [
+    { title: 'System Name', dataIndex: 'systemname', key: 'systemname' },
+    { title: 'Description', dataIndex: 'description', key: 'description' },
+    { title: 'Date Created', dataIndex: 'date_created', key: 'date_created', render: (date) => date ? moment(date).format('YYYY-MM-DD HH:mm') : 'N/A' },
+    { title: 'Date Updated', dataIndex: 'date_updated', key: 'date_updated', render: (date) => date ? moment(date).format('YYYY-MM-DD HH:mm') : 'N/A' },
+  ];
+
+  const roleColumns = [
+    { title: 'Role Name', dataIndex: 'rolename', key: 'rolename' },
+    { title: 'Description', dataIndex: 'description', key: 'description' },
+    { title: 'Date Created', dataIndex: 'date_created', key: 'date_created', render: (date) => date ? moment(date).format('YYYY-MM-DD HH:mm') : 'N/A' },
+    { title: 'Date Updated', dataIndex: 'date_updated', key: 'date_updated', render: (date) => date ? moment(date).format('YYYY-MM-DD HH:mm') : 'N/A' },
+  ];
+
+  const categoryColumns = [
+    { title: 'Category Name', dataIndex: 'categoryname', key: 'categoryname' },
+    { title: 'Description', dataIndex: 'description', key: 'description' },
+    { title: 'DB Type', dataIndex: 'category_preferences', key: 'db_type', render: (prefs) => prefs ? JSON.parse(prefs).db_type : 'N/A' },
+    { title: 'Date Created', dataIndex: 'date_created', key: 'date_created', render: (date) => date ? moment(date).format('YYYY-MM-DD HH:mm') : 'N/A' },
+    { title: 'Date Updated', dataIndex: 'date_updated', key: 'date_updated', render: (date) => date ? moment(date).format('YYYY-MM-DD HH:mm') : 'N/A' },
+  ];
+
   return (
     <Tabs defaultActiveKey="systems">
       <Tabs.TabPane tab="Systems" key="systems">
@@ -91,19 +114,22 @@ const AdminPage = () => {
             <Form.Item> <Button type="primary" htmlType="submit">Add System</Button> </Form.Item>
           </Form>
         </Card>
-        <List
-          bordered
+        <h3>Existing Systems</h3>
+        <Table
+          columns={systemColumns}
           dataSource={systems}
-          renderItem={item => (
-            <List.Item onClick={() => handleSystemSelect(item)} style={{ cursor: 'pointer', background: selectedSystem?.systemid === item.systemid ? '#e6f7ff' : undefined }}>
-              <b>{item.systemname}</b> {item.description && <span style={{ marginLeft: 8 }}>{item.description}</span>}
-            </List.Item>
-          )}
+          rowKey="systemid"
+          pagination={false}
+          onRow={(record) => ({
+            onClick: () => handleSystemSelect(record),
+            style: { cursor: 'pointer', background: selectedSystem?.systemid === record.systemid ? '#e6f7ff' : undefined },
+          })}
         />
       </Tabs.TabPane>
       <Tabs.TabPane tab="Roles" key="roles" disabled={!selectedSystem}>
         <Button type="primary" onClick={() => setRoleModal(true)} style={{ marginBottom: 16 }}>Add Role</Button>
-        <List bordered dataSource={roles} renderItem={item => <List.Item>{item.rolename}</List.Item>} />
+        <h3>Roles for {selectedSystem?.systemname}</h3>
+        <Table columns={roleColumns} dataSource={roles} rowKey="roleid" pagination={false} />
         <Modal open={roleModal} onCancel={() => setRoleModal(false)} onOk={() => roleForm.submit()} title="Add Role" okText="Add">
           <Form form={roleForm} onFinish={handleAddRole} layout="vertical">
             <Form.Item name="rolename" label="Role Name" rules={[{ required: true }]}> <Input /> </Form.Item>
@@ -113,7 +139,8 @@ const AdminPage = () => {
       </Tabs.TabPane>
       <Tabs.TabPane tab="Categories" key="categories" disabled={!selectedSystem}>
         <Button type="primary" onClick={() => setCategoryModal(true)} style={{ marginBottom: 16 }}>Add Category</Button>
-        <List bordered dataSource={categories} renderItem={item => <List.Item>{item.categoryname}</List.Item>} />
+        <h3>Categories for {selectedSystem?.systemname}</h3>
+        <Table columns={categoryColumns} dataSource={categories} rowKey="categoryid" pagination={false} />
         <Modal open={categoryModal} onCancel={() => setCategoryModal(false)} onOk={() => categoryForm.submit()} title="Add Category" okText="Add">
           <Form form={categoryForm} onFinish={handleAddCategory} layout="vertical">
             <Form.Item name="categoryname" label="Category Name" rules={[{ required: true }]}> <Input /> </Form.Item>
