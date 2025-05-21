@@ -39,15 +39,19 @@ const AdminPage = () => {
     if (selectedSystem) {
       console.log("Selected system:", selectedSystem);
       axios.get(`${apiUrl}/roles/by_system/${selectedSystem.systemid}`).then(res => {
-          console.log(`Fetched Roles (before setRoles) for system ${selectedSystem.systemid}:`, res.data.dev);
-          setRoles(res.data.dev || []);
-          console.log(`Roles state should be updated now for system ${selectedSystem.systemid}.`);
+          console.log(`Fetched Roles (API response data.dev) for system ${selectedSystem.systemid}:`, res.data.dev);
+          const rolesData = res.data.dev || [];
+          console.log(`Calling setRoles with:`, rolesData);
+          setRoles(rolesData);
+          console.log(`setRoles called for system ${selectedSystem.systemid}.`);
       }).catch(error => console.error(`Error fetching roles for system ${selectedSystem.systemid}:`, error));
 
       axios.get(`${apiUrl}/categories/by_system/${selectedSystem.systemid}`).then(res => {
-          console.log(`Fetched Categories (before setCategories) for system ${selectedSystem.systemid}:`, res.data.dev);
-          setCategories(res.data.dev || []);
-          console.log(`Categories state should be updated now for system ${selectedSystem.systemid}.`);
+          console.log(`Fetched Categories (API response data.dev) for system ${selectedSystem.systemid}:`, res.data.dev);
+          const categoriesData = res.data.dev || [];
+           console.log(`Calling setCategories with:`, categoriesData);
+          setCategories(categoriesData);
+          console.log(`setCategories called for system ${selectedSystem.systemid}.`);
       }).catch(error => console.error(`Error fetching categories for system ${selectedSystem.systemid}:`, error));
     } else {
         setRoles([]); // Clear roles if no system is selected
@@ -172,12 +176,12 @@ const AdminPage = () => {
             </Card>
 
             <Card title={`Roles for ${selectedSystem.systemname}`} style={{ marginBottom: 16 }} extra={<Button type="primary" onClick={() => setRoleModal(true)}>Add Role</Button>}>
-              {console.log("Rendering Roles Table with data:", roles)}
+              {console.log(`Rendering Roles Table for system ${selectedSystem.systemid}. Data source:`, roles)}
               <Table key={`roles-table-${selectedSystem.systemid}`} columns={roleColumns} dataSource={roles} rowKey="roleid" pagination={false} />
             </Card>
 
             <Card title={`Categories for ${selectedSystem.systemname}`} extra={<Button type="primary" onClick={() => setCategoryModal(true)}>Add Category</Button>}>
-               {console.log("Rendering Categories Table with data:", categories)}
+               {console.log(`Rendering Categories Table for system ${selectedSystem.systemid}. Data source:`, categories)}
               <Table key={`categories-table-${selectedSystem.systemid}`} columns={categoryColumns} dataSource={categories} rowKey="categoryid" pagination={false} />
             </Card>
 
