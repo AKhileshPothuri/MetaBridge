@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import EntityTable from '../components/EntityTable';
-import { Modal, Table, Tag } from 'antd';
+import { Modal, Table, Tag, Drawer, Button } from 'antd';
+import ReactJson from 'react-json-view';
 
 const ContextsPage = () => {
   const [data, setData] = useState([]);
   const [historyVisible, setHistoryVisible] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [drawerData, setDrawerData] = useState(null);
+  const [drawerLoading, setDrawerLoading] = useState(false);
   const apiUrl = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
@@ -47,6 +51,15 @@ const ContextsPage = () => {
     });
   };
 
+  const handleViewDetails = (context_vector_id) => {
+    setDrawerVisible(true);
+    setDrawerLoading(true);
+    axios.get(`${apiUrl}/contexts/full/${context_vector_id}`).then(res => {
+      setDrawerData(res.data);
+      setDrawerLoading(false);
+    });
+  };
+
   const historyColumns = [
     { title: 'Action', dataIndex: 'action', render: (action) => <Tag color={action === 'INSERT' ? 'green' : action === 'UPDATE' ? 'blue' : 'red'}>{action}</Tag> },
     { title: 'Changed By', dataIndex: 'changed_by' },
@@ -56,10 +69,14 @@ const ContextsPage = () => {
     { title: 'Reason', dataIndex: 'change_reason' },
   ];
 
+  const customActions = (record) => (
+    <Button onClick={() => handleViewDetails(record.context_vector_id)} style={{ marginRight: 8 }}>View Details</Button>
+  );
+
   return (
     <div>
       <h2>Contexts</h2>
-      <EntityTable data={data} entityType="context" onSync={handleSync} onHistory={handleHistory} />
+      <EntityTable data={data} entityType="context" onSync={handleSync} onHistory={handleHistory} customActions={customActions} />
       <Modal
         title="Context History"
         open={historyVisible}
@@ -75,6 +92,14 @@ const ContextsPage = () => {
           pagination={false}
         />
       </Modal>
+      <Drawer
+        title="Context Details"
+        open={drawerVisible}
+        onClose={() => setDrawerVisible(false)}
+        width={700}
+      >
+        {drawerLoading ? <p>Loading...</p> : drawerData && <ReactJson src={drawerData} name={false} collapsed={false} displayDataTypes={false} enableClipboard={false} style={{ fontSize: 14 }} />}
+      </Drawer>
     </div>
   );
 };

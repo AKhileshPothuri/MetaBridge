@@ -1,7 +1,7 @@
 import React from 'react';
 import { Table, Button, Tag } from 'antd';
 
-const EntityTable = ({ data, entityType, onSync, onHistory }) => {
+const EntityTable = ({ data, entityType, onSync, onHistory, customActions }) => {
   const columns = [
     {
       title: `${entityType} Name`,
@@ -45,9 +45,12 @@ const EntityTable = ({ data, entityType, onSync, onHistory }) => {
     {
       title: 'Action',
       render: (_, record) => (
-        <Button type="primary" onClick={() => onSync(record.tableid || record.systemid || record.roleid || record.categoryid || record.contextid)} disabled={!record.dev_present}>
-          Sync to Prod
-        </Button>
+        <>
+          {customActions && customActions(record)}
+          <Button type="primary" onClick={() => onSync(record.tableid || record.systemid || record.roleid || record.categoryid || record.contextid)} disabled={!record.dev_present}>
+            Sync to Prod
+          </Button>
+        </>
       ),
     },
   ].filter(Boolean);

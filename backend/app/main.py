@@ -1,10 +1,14 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from . import db, crud, models, schemas
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from datetime import datetime, timedelta
 import random
+import base64
+import json
+import os
+import requests
 
 app = FastAPI()
 app.add_middleware(
@@ -174,4 +178,114 @@ def get_context_history(contextid: int):
             changed_at=f"2024-06-0{(i%9)+1}T12:00:00",
             change_reason="Mocked change"
         ))
-    return history 
+    return history
+
+@app.post("/systems/")
+def create_system(system: schemas.SystemBase, db: Session = Depends(get_dev_db)):
+    new_system = models.System(**system.dict())
+    db.add(new_system)
+    db.commit()
+    db.refresh(new_system)
+    return schemas.System.from_orm(new_system)
+
+@app.get("/systems/")
+def list_systems(db: Session = Depends(get_dev_db)):
+    return [schemas.System.from_orm(s) for s in db.query(models.System).all()]
+
+@app.post("/roles/")
+def create_role(role: schemas.RoleBase, db: Session = Depends(get_dev_db)):
+    new_role = models.Role(**role.dict())
+    db.add(new_role)
+    db.commit()
+    db.refresh(new_role)
+    return schemas.Role.from_orm(new_role)
+
+@app.get("/roles/by_system/{systemid}")
+def list_roles_by_system(systemid: int, db: Session = Depends(get_dev_db)):
+    return [schemas.Role.from_orm(r) for r in db.query(models.Role).filter(models.Role.systemid == systemid).all()]
+
+@app.post("/categories/")
+def create_category(category: schemas.CategoryBase, db: Session = Depends(get_dev_db), db_type: str = Body(...), db_creds: dict = Body(...)):
+    # Encode credentials
+    creds_json = json.dumps(db_creds)
+    creds_b64 = base64.b64encode(creds_json.encode()).decode()
+    category_dict = category.dict()
+    category_dict["category_preferences"] = json.dumps({"db_type": db_type, "credentials": creds_b64})
+    new_category = models.Category(**category_dict)
+    db.add(new_category)
+    db.commit()
+    db.refresh(new_category)
+    return schemas.Category.from_orm(new_category)
+
+@app.get("/categories/by_system/{systemid}")
+def list_categories_by_system(systemid: int, db: Session = Depends(get_dev_db)):
+    return [schemas.Category.from_orm(c) for c in db.query(models.Category).filter(models.Category.systemid == systemid).all()]
+
+@app.post("/db/list_schemas/")
+def list_schemas(categoryid: int = Body(...), db: Session = Depends(get_dev_db)):
+    # Only Postgres for now
+    category = db.query(models.Category).filter(models.Category.categoryid == categoryid).first()
+    prefs = json.loads(category.category_preferences)
+    if prefs["db_type"] != "postgres":
+        return []
+    creds = json.loads(base64.b64decode(prefs["credentials"]).decode())
+    import psycopg2
+    conn = psycopg2.connect(database=creds["database"], user=creds["user"], password=creds["password"], host=creds["host"], port=creds["port"])
+    cur = conn.cursor()
+    cur.execute("SELECT schema_name FROM information_schema.schemata;")
+    schemas_list = [row[0] for row in cur.fetchall()]
+    cur.close()
+    conn.close()
+    return schemas_list
+
+@app.post("/db/list_tables/")
+def list_tables(categoryid: int = Body(...), schema: str = Body(...), db: Session = Depends(get_dev_db)):
+    category = db.query(models.Category).filter(models.Category.categoryid == categoryid).first()
+    prefs = json.loads(category.category_preferences)
+    if prefs["db_type"] != "postgres":
+        return []
+    creds = json.loads(base64.b64decode(prefs["credentials"]).decode())
+    import psycopg2
+    conn = psycopg2.connect(database=creds["database"], user=creds["user"], password=creds["password"], host=creds["host"], port=creds["port"])
+    cur = conn.cursor()
+    cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;", (schema,))
+    tables_list = [row[0] for row in cur.fetchall()]
+    cur.close()
+    conn.close()
+    return tables_list
+
+@app.post("/db/generate_metadata/")
+def generate_metadata(categoryid: int = Body(...), schema: str = Body(...), table: str = Body(...)):
+    # Placeholder request body
+    api_url = os.getenv("METADATA_API_URL", "http://localhost:8001/generate_metadata")
+    req_body = {"categoryid": categoryid, "schema": schema, "table": table}
+    resp = requests.post(api_url, json=req_body)
+    return resp.json()
+
+@app.get("/catalogs/full/{table_vector_id}")
+def get_full_catalog_by_vector_id(table_vector_id: str, db: Session = Depends(get_dev_db)):
+    # Fetch main catalog info
+    catalog = db.query(models.Catalog).filter(models.Catalog.table_vector_id == table_vector_id).first()
+    if not catalog:
+        raise HTTPException(status_code=404, detail="Catalog not found")
+    # Mock: fetch related info (rules, usage_patterns, columns, samples)
+    # In real code, join or query related tables as in your screenshots
+    # Here, just return catalog info for now
+    catalog_dict = {**catalog.__dict__}
+    catalog_dict.pop('_sa_instance_state', None)
+    # TODO: Add real joins for rules, usage_patterns, columns, samples
+    catalog_dict['rules'] = catalog.rules
+    catalog_dict['usage_patterns'] = catalog.usage_patterns
+    catalog_dict['columns'] = catalog.columns
+    catalog_dict['samples'] = []  # Placeholder
+    return catalog_dict
+
+@app.get("/contexts/full/{context_vector_id}")
+def get_full_context_by_vector_id(context_vector_id: str, db: Session = Depends(get_dev_db)):
+    context = db.query(models.Context).filter(models.Context.context_vector_id == context_vector_id).first()
+    if not context:
+        raise HTTPException(status_code=404, detail="Context not found")
+    context_dict = {**context.__dict__}
+    context_dict.pop('_sa_instance_state', None)
+    # TODO: Add real joins for related tables
+    return context_dict 

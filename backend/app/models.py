@@ -6,6 +6,7 @@ Base = declarative_base()
 
 class System(Base):
     __tablename__ = "systems"
+    __table_args__ = {"schema":"autobi"}
     systemid = Column(Integer, primary_key=True, index=True)
     systemname = Column(String(255))
     systemurl = Column(String(255))
@@ -18,6 +19,7 @@ class System(Base):
 
 class Role(Base):
     __tablename__ = "roles"
+    __table_args__ = {"schema":"autobi"}
     roleid = Column(Integer, primary_key=True, index=True)
     rolename = Column(String(255))
     systemid = Column(Integer, ForeignKey("systems.systemid"))
@@ -29,6 +31,7 @@ class Role(Base):
 
 class Category(Base):
     __tablename__ = "category"
+    __table_args__ = {"schema":"autobi"}
     categoryid = Column(Integer, primary_key=True, index=True)
     categoryname = Column(String(255))
     systemid = Column(Integer, ForeignKey("systems.systemid"))
@@ -40,6 +43,7 @@ class Category(Base):
 
 class Catalog(Base):
     __tablename__ = "catalog"
+    __table_args__ = {"schema":"autobi"}
     tableid = Column(Integer, primary_key=True, index=True)
     table_vector_id = Column(String)
     table_name = Column(String)
@@ -53,6 +57,7 @@ class Catalog(Base):
 
 class Context(Base):
     __tablename__ = "context"
+    __table_args__ = {"schema":"autobi"}
     contextid = Column(Integer, primary_key=True, index=True)
     context_vector_id = Column(String)
     context_name = Column(String)
@@ -68,7 +73,7 @@ class Context(Base):
 
 class TableAudit(Base):
     __tablename__ = "table_audit"
-    
+    __table_args__ = {"schema":"autobi"}
     audit_id = Column(Integer, primary_key=True)
     table_name = Column(String(255), nullable=False)
     record_id = Column(Integer, nullable=False)

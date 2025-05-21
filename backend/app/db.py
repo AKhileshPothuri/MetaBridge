@@ -2,7 +2,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
-
+import urllib.parse
 load_dotenv()
 
 def make_url(prefix):
@@ -10,9 +10,10 @@ def make_url(prefix):
     port = os.getenv(f"{prefix}_DB_PORT", "5432")
     user = os.getenv(f"{prefix}_DB_USER", "postgres")
     password = os.getenv(f"{prefix}_DB_PASSWORD", "")
+    DB_PASSWORD_encoded = urllib.parse.quote_plus(password)
     dbname = os.getenv(f"{prefix}_DB_NAME", "postgres")
     if password:
-        return f"postgresql://{user}:{password}@{host}:{port}/{dbname}"
+        return f"postgresql://{user}:{DB_PASSWORD_encoded}@{host}:{port}/{dbname}"
     else:
         return f"postgresql://{user}@{host}:{port}/{dbname}"
 
