@@ -18,7 +18,7 @@ const OnboardingPage = () => {
   const [metadata, setMetadata] = useState(null);
 
   useEffect(() => {
-    axios.get(`${apiUrl}/categories/`).then(res => setCategories(res.data));
+    axios.get(`${apiUrl}/categories/`).then(res => setCategories(res.data.dev || []));
   }, [apiUrl]);
 
   const fetchSchemas = () => {

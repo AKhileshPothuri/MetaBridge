@@ -26,14 +26,14 @@ const AdminPage = () => {
   const [dbType, setDbType] = useState('postgres');
 
   useEffect(() => {
-    axios.get(`${apiUrl}/systems/`).then(res => setSystems(res.data));
+    axios.get(`${apiUrl}/systems/`).then(res => setSystems(res.data.dev || []));
   }, [apiUrl]);
 
   const fetchRoles = (systemid) => {
-    axios.get(`${apiUrl}/roles/by_system/${systemid}`).then(res => setRoles(res.data));
+    axios.get(`${apiUrl}/roles/by_system/${systemid}`).then(res => setRoles(res.data.dev || []));
   };
   const fetchCategories = (systemid) => {
-    axios.get(`${apiUrl}/categories/by_system/${systemid}`).then(res => setCategories(res.data));
+    axios.get(`${apiUrl}/categories/by_system/${systemid}`).then(res => setCategories(res.data.dev || []));
   };
 
   const handleSystemSelect = (system) => {
