@@ -109,6 +109,11 @@ const AdminPage = () => {
   const roleColumns = [
     { title: 'Role Name', dataIndex: 'rolename', key: 'rolename' },
     { title: 'Description', dataIndex: 'description', key: 'description' },
+    {
+        title: 'System',
+        key: 'system',
+        render: (_, record) => selectedSystem?.systemname || 'N/A'
+    },
     { title: 'Date Created', dataIndex: 'date_created', key: 'date_created', render: (date) => date ? moment(date).format('YYYY-MM-DD HH:mm') : 'N/A' },
     { title: 'Date Updated', dataIndex: 'date_updated', key: 'date_updated', render: (date) => date ? moment(date).format('YYYY-MM-DD HH:mm') : 'N/A' },
   ];
@@ -116,6 +121,11 @@ const AdminPage = () => {
   const categoryColumns = [
     { title: 'Category Name', dataIndex: 'categoryname', key: 'categoryname' },
     { title: 'Description', dataIndex: 'description', key: 'description' },
+    {
+        title: 'System',
+        key: 'system',
+        render: (_, record) => selectedSystem?.systemname || 'N/A'
+    },
     { title: 'DB Type', dataIndex: 'category_preferences', key: 'db_type', render: (prefs) => {
         try {
             const parsedPrefs = JSON.parse(prefs);
@@ -160,10 +170,12 @@ const AdminPage = () => {
             </Card>
 
             <Card title={`Roles for ${selectedSystem.systemname}`} style={{ marginBottom: 16 }} extra={<Button type="primary" onClick={() => setRoleModal(true)}>Add Role</Button>}>
+              {console.log("Rendering Roles Table with data:", roles)}
               <Table key={`roles-table-${selectedSystem.systemid}`} columns={roleColumns} dataSource={roles} rowKey="roleid" pagination={false} />
             </Card>
 
             <Card title={`Categories for ${selectedSystem.systemname}`} extra={<Button type="primary" onClick={() => setCategoryModal(true)}>Add Category</Button>}>
+               {console.log("Rendering Categories Table with data:", categories)}
               <Table key={`categories-table-${selectedSystem.systemid}`} columns={categoryColumns} dataSource={categories} rowKey="categoryid" pagination={false} />
             </Card>
 
